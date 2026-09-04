@@ -1,27 +1,40 @@
-# BondStats Central Bank Watch — Test Hotfix
+# BondStats Central Bank Watch — Robust Test Patch
 
-This patch fixes the recurring GitHub Actions failure caused by a hard-coded
-Bank of Canada meeting date in `tests/test_policy.py`.
+This patch replaces only:
 
-## What changes
+`tests/test_policy.py`
 
-It removes this obsolete assertion:
+It fixes the recurring GitHub Actions failures caused by brittle, hard-coded
+assertions such as:
 
-    ok("current verified BoC next date", next(b for b in banks if b["id"]=="BOC")["nextMeeting"] == "2026-09-02")
+- a specific Bank of Canada meeting date
+- a specific Swiss National Bank URL path
 
-The test suite already contains the broader `future next meetings` validation,
-so the hard-coded BoC date is redundant and causes the workflow to fail as soon
-as the meeting date passes or the updater advances to the next meeting.
+The new validator checks the generated feed structurally and plausibly instead:
 
-No updater, source parser, generated feed, website UI, or central-bank data is changed.
+- exactly the expected seven central banks
+- unique bank IDs
+- HTTPS source URLs
+- non-empty source-status values when that field exists
+- next-meeting dates are valid and not in the past
+- no specific meeting date is hard-coded
+- no exact central-bank webpage path is hard-coded
 
-## Apply
+It also discovers the generated JSON feed by content, so it does not depend on a
+single fragile JSON file path.
 
-From the repository root:
+## Install
 
-    git apply patches/fix-central-bank-watch-tests.patch
+Overlay this ZIP on the repository root so that the file ends up exactly at:
 
-Then commit and push.
+`tests/test_policy.py`
 
-If you edit in the GitHub web UI instead, simply delete the obsolete BoC assertion
-from `tests/test_policy.py`, commit the change, and rerun the `update` workflow.
+Commit and push, then rerun the existing `update` GitHub Action.
+
+The workflow already calls `python tests/test_policy.py`, so no workflow change
+is required.
+
+## Scope
+
+No updater/parser, data source, website UI, generated JSON schema, or GitHub
+workflow is modified by this patch.
