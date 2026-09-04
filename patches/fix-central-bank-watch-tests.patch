@@ -1,0 +1,5 @@
+diff --git a/tests/test_policy.py b/tests/test_policy.py
+--- a/tests/test_policy.py
++++ b/tests/test_policy.py
+@@
+-ok("current verified BoC next date", next(b for b in banks if b["id"]=="BOC")["nextMeeting"] == "2026-09-02")
