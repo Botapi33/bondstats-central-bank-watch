@@ -194,11 +194,19 @@ for bank in banks:
         continue
 
     parsed = parse_iso_date(raw)
+
+    # The updater deliberately fails closed: if an official source cannot be
+    # refreshed safely, it retains the last-known-good record and marks that
+    # bank as degraded. In that state the stored meeting can legitimately have
+    # just passed; failing CI would prevent the next scheduled run from
+    # recovering automatically. Healthy records, however, must always point to
+    # a current/future meeting.
+    degraded = str(bank.get("refreshState", "")).strip().lower() == "degraded"
     meeting_checks.append(
-        parsed is not None and parsed >= today
+        parsed is not None and (parsed >= today or degraded)
     )
 
-ok("future next meetings", all(meeting_checks) if meeting_checks else True)
+ok("future next meetings (or degraded last-known-good)", all(meeting_checks) if meeting_checks else True)
 
 # 5) Basic record quality without pinning values.
 ok(
